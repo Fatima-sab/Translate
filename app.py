@@ -1,4 +1,5 @@
 import streamlit as st
+import gtts googletrans==4.0.0-rc1
 from gtts import gTTS
 from googletrans import Translator
 import os
