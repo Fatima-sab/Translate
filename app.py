@@ -1,6 +1,7 @@
 import streamlit as st
 from gtts import gTTS
 from googletrans import Translator
+import tempfile
 import os
 
 # Initialize Translator
@@ -19,9 +20,14 @@ def get_translation(word):
 
 @st.cache
 def get_pronunciation(word):
-    tts = gTTS(text=word, lang='en')
-    tts.save("word.mp3")
-    return "word.mp3"
+    try:
+        tts = gTTS(text=word, lang='en')
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.mp3') as tmp_file:
+            tts.save(tmp_file.name)
+            return tmp_file.name
+    except Exception as e:
+        st.error(f"Error generating speech: {e}")
+        return None
 
 # Check if a word was entered
 if word:
@@ -33,10 +39,11 @@ if word:
     # Generate and play the pronunciation
     if st.button("Pronounce English Word"):
         pronunciation_file = get_pronunciation(word)  # Cached
-        # Display audio player
-        audio_file = open(pronunciation_file, "rb")
-        audio_bytes = audio_file.read()
-        st.audio(audio_bytes, format="audio/mp3")
+        if pronunciation_file:
+            # Display audio player
+            st.audio(pronunciation_file)
+            # Clean up temporary file after playing the audio
+            os.remove(pronunciation_file)
 
 # Note for Streamlit deployment
 st.write("This app translates English words to Urdu and plays their pronunciation.")
